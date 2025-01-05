@@ -38,4 +38,16 @@
             <jvmarg value="-Djava.library.path=lib/jogamp-all-platforms/lib"/>
         </java>
     </target>
+    
+    <!-- Génération de la documentation Javadoc -->
+    <target name="javadoc" description="Génère la documentation Javadoc">
+        <mkdir dir="doc"/>
+        <javadoc destdir="doc" sourcepath="${src.dir}" packagenames="spaceInvader" classpath="${lib.dir}/jogl-all.jar:${lib.dir}/gluegen-rt.jar">
+            <classpath>
+                <pathelement path="${lib.dir}/jogl-all.jar"/>
+                <pathelement path="${lib.dir}/gluegen-rt.jar"/>
+            </classpath>
+        </javadoc>
+    </target>
+
 </project>

@@ -14,28 +14,66 @@ import java.util.Iterator;
 
 import spaceInvader.objets.*;
 
+/**
+ * Classe Canva
+ * 
+ * Cette classe est la classe principal de l'application. Elle gère la logique
+ * du jeu et l'affichage graphique. Elle hérite de GLCanvas et implémente les
+ * interfaces GLEventListener et KeyListener.
+ */
 public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
+    /** Référence à la fenêtre principale du jeu. */
     private Fenetre frame;
 
-    private static final float X_LIMIT = 10.0f; // Limite horizontale
-    private static final float Y_LIMIT = 5.0f; // Limite verticale
-    private static final int MAX_ROWS = 5; // Nombre maximum de rangées d'ennemis
+    /** Limite horizontale de la scène. */
+    private static final float X_LIMIT = 10.0f;
 
+    /** Limite verticale de la scène. */
+    private static final float Y_LIMIT = 5.0f;
+
+    /** Nombre maximum de rangées d'ennemis affichées. */
+    private static final int MAX_ROWS = 5;
+
+    /** Objet Animator pour animer la scène. */
     private Animator animator;
-    private Player player; // Le Player contrôlé par le joueur
+
+    /** Joueur contrôlé par l'utilisateur. */
+    private Player player;
+
+    /** Liste des projectiles tirés par le joueur. */
     private ArrayList<Projectile> projectiles;
-    private ArrayList<Enemy> enemies; // Liste des ennemis
-    private boolean[] keys; // Tableau pour enregistrer les touches pressées
-    private Thread inputThread; // Thread pour gérer les entrées utilisateur
-    private volatile boolean running; // Flag pour le thread
 
-    private float enemyDirection = 0.1f; // Direction des ennemis (gauche-droite)
+    /** Liste des ennemis présents dans la scène. */
+    private ArrayList<Enemy> enemies;
 
-    private int enemiesKilled = 0; // Compteur d'ennemis tués
-    private int waveNumber = 1; // Numéro de la vague
-    private int waveNumberLabel = 1; // Numéro de la vague label qui ne baissera pas apres la vague 5
+    /** Tableau d'état des touches pressées. */
+    private boolean[] keys;
 
+    /** Thread dédié à la gestion des entrées clavier. */
+    private Thread inputThread;
+
+    /** Indicateur de l'état d'exécution du thread. */
+    private volatile boolean running;
+
+    /** Direction des ennemis sur l'axe X. */
+    private float enemyDirection = 0.1f;
+
+    /** Compteur du nombre d'ennemis tués. */
+    private int enemiesKilled = 0;
+
+    /** Numéro de la vague actuelle d'ennemis. */
+    private int waveNumber = 1;
+
+    /** Numéro de vague utilisé pour l'affichage (ne diminue pas). */
+    private int waveNumberLabel = 1;
+
+    /**
+     * Constructeur de la classe Canva.
+     * Initialise la scène, le joueur, les ennemis et démarre l'animation.
+     *
+     * @param frame Référence à la fenêtre principale.
+     */
     public Canva(Fenetre frame) {
         super();
         this.frame = frame;
@@ -62,6 +100,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         this.inputThread.start();
     }
 
+    /**
+     * Méthode d'initialisation de la scène.
+     * 
+     * @param drawable L'objet GLAutoDrawable.
+     */
     @Override
     public void init(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
@@ -70,6 +113,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         this.requestFocus(); // Nécessaire pour recevoir les événements
     }
 
+    /**
+     * Méthode d'affichage de la scène.
+     * 
+     * @param drawable L'objet GLAutoDrawable.
+     */
     @Override
     public void display(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
@@ -116,6 +164,15 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         drawHUD(gl, glut);
     }
 
+    /**
+     * Méthode de redimensionnement de la scène.
+     * 
+     * @param drawable L'objet GLAutoDrawable.
+     * @param x        Position en X.
+     * @param y        Position en Y.
+     * @param width    Largeur.
+     * @param height   Hauteur.
+     */
     @Override
     public void reshape(GLAutoDrawable drawable, int x, int y, int width, int height) {
         GL2 gl = drawable.getGL().getGL2();
@@ -130,6 +187,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         gl.glLoadIdentity();
     }
 
+    /**
+     * Méthode de libération des ressources.
+     * 
+     * @param drawable L'objet GLAutoDrawable.
+     */
     @Override
     public void dispose(GLAutoDrawable drawable) {
         if (animator != null) {
@@ -152,6 +214,10 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
      * ----------------------------------
      */
 
+    /**
+     * Méthode d'initialisation des ennemis.
+     * Crée une grille d'ennemis en fonction du numéro de vague.
+     */
     private void initializeEnemies() {
         float startX = -2.0f; // Position de départ en X
         float startY = 4.0f; // Position de départ en Y
@@ -171,6 +237,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
     }
 
+    /**
+     * Méthode pour charger la vague suivante d'ennemis.
+     * Réinitialise la liste des ennemis et augmente la difficulté.
+     * Si le nombre de rangées atteint le maximum, il est réinitialisé.
+     */
     private void nextWave() {
         enemies.clear(); // Supprimer les ennemis existants
 
@@ -186,6 +257,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         initializeEnemies(); // Réinitialise les ennemis avec la nouvelle vague
     }
 
+    /**
+     * Méthode pour déplacer les ennemis.
+     * Les ennemis se déplacent horizontalement et descendent lorsqu'ils atteignent
+     * les limites de la scène.
+     */
     private void moveEnemies() {
         for (Enemy enemy : enemies) {
             enemy.move(enemyDirection, 0);
@@ -207,6 +283,9 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
     }
 
+    /**
+     * Méthode pour tirer un projectile.
+     */
     public void shoot() {
         projectiles.add(new Projectile(player.getX(), player.getY(), player.getZ() - 1.0f, -0.2f, 0.8f, 0.8f));
     }
@@ -219,12 +298,24 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
      * 
      * ----------------------------------
      */
+
+    /**
+     * Méthode pour mettre à jour les projectiles.
+     * Les projectiles se déplacent vers le haut de la scène.
+     */
     private void updateProjectiles() {
         for (Projectile projectile : projectiles) {
             projectile.move();
         }
     }
 
+    /**
+     * Méthode pour vérifier si deux objets graphiques sont en collision.
+     * 
+     * @param obj1 Le premier objet graphique.
+     * @param obj2 Le deuxième objet graphique.
+     * @return true si les objets sont en collision, false sinon.
+     */
     private boolean isColliding(GraphicalObject obj1, GraphicalObject obj2) {
         float halfWidth1 = obj1.getWidth() / 2;
         float halfHeight1 = obj1.getHeight() / 2;
@@ -238,6 +329,12 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
                 distanceY < (halfHeight1 + halfHeight2);
     }
 
+    /**
+     * Méthode pour vérifier les collisions entre les projectiles et les ennemis.
+     * Si un projectile touche un ennemi, l'ennemi est marqué comme mort.
+     * Si tous les ennemis sont morts, la vague suivante est chargée.
+     * Si un ennemi atteint le joueur, le jeu est terminé.
+     */
     private void checkCollisions() {
         Iterator<Projectile> projectileIterator = projectiles.iterator();
 
@@ -275,21 +372,40 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
      * ----------------------------------
      */
 
+    /**
+     * Méthode pour gérer les événements de pression de touche.
+     * 
+     * @param e L'événement de pression de touche.
+     */
     @Override
     public void keyPressed(KeyEvent e) {
         keys[e.getKeyCode()] = true;
     }
 
+    /**
+     * Méthode pour gérer les événements de relâchement de touche.
+     * 
+     * @param e L'événement de relâchement de touche.
+     */
     @Override
     public void keyReleased(KeyEvent e) {
         keys[e.getKeyCode()] = false;
     }
 
+    /**
+     * Méthode pour gérer les événements de frappe de touche.
+     * 
+     * @param e L'événement de frappe de touche.
+     */
     @Override
     public void keyTyped(KeyEvent e) {
         // Aucune action spécifique ici
     }
 
+    /**
+     * Méthode pour traiter les entrées utilisateur.
+     * Gère les déplacements du joueur et les tirs.
+     */
     private void processInput() {
         while (running) {
             float nextX = player.getX();
@@ -337,6 +453,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
      * ----------------------------------
      */
 
+    /**
+     * Méthode pour vérifier si le jeu est terminé.
+     * Le jeu est terminé si un ennemi atteint le joueur ou si un ennemi touche le
+     * bas de l'écran.
+     */
     private void checkGameOver() {
         for (Enemy enemy : enemies) {
             if (enemy.getY() <= -Y_LIMIT || isColliding(player, enemy)) {
@@ -348,6 +469,10 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
     }
 
+    /**
+     * Méthode pour arrêter le jeu.
+     * Arrête le thread de gestion des entrées et l'animation.
+     */
     public void stop() {
         running = false; // Arrête le thread d’entrée utilisateur
         if (animator != null && animator.isStarted()) {
@@ -368,6 +493,13 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
      * 
      */
 
+    /**
+     * Méthode pour dessiner l'interface utilisateur (HUD).
+     * Affiche le nombre d'ennemis tués et le numéro de la vague.
+     * 
+     * @param gl   Objet GL2.
+     * @param glut Objet GLUT.
+     */
     private void drawHUD(GL2 gl, GLUT glut) {
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glPushMatrix();

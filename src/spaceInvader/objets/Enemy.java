@@ -1,16 +1,46 @@
+/**
+ * Classe Enemy représentant un ennemi dans le jeu Space Invaders.
+ * Cette classe hérite de GraphicalObject et définit les caractéristiques
+ * graphiques d'un ennemi, ainsi que ses comportements de déplacement et d'état.
+ * L'ennemi est dessiné en utilisant OpenGL.
+ *
+ * @author Baptiste Borie
+ */
 package spaceInvader.objets;
 
 import com.jogamp.opengl.GL2;
 
 public class Enemy extends GraphicalObject {
 
+    /**
+     * Indique si l'ennemi est vivant.
+     */
     private boolean isAlive;
 
+    /**
+     * Constructeur de la classe Enemy.
+     * Initialise la position, l'échelle, la hauteur et la largeur de l'ennemi,
+     * et le marque comme vivant par défaut.
+     *
+     * @param pX     Position initiale en X.
+     * @param pY     Position initiale en Y.
+     * @param pZ     Position initiale en Z.
+     * @param scale  Facteur d'échelle de l'ennemi.
+     * @param height Hauteur de l'ennemi.
+     * @param width  Largeur de l'ennemi.
+     */
     public Enemy(float pX, float pY, float pZ, float scale, float height, float width) {
         super(pX, pY, pZ, 0.0f, 1.0f, 0.0f, scale, height, width); // Vert par défaut
         this.isAlive = true;
     }
 
+    /**
+     * Affiche l'ennemi sous forme normalisée en utilisant OpenGL.
+     * Si l'ennemi est vivant, il dessine le corps principal, les yeux, les antennes
+     * et les pieds de l'ennemi.
+     *
+     * @param gl Contexte OpenGL utilisé pour le rendu graphique.
+     */
     @Override
     public void displayNormalized(GL2 gl) {
         if (isAlive) {
@@ -65,14 +95,28 @@ public class Enemy extends GraphicalObject {
         }
     }
 
+    /**
+     * Renvoie l'état actuel de l'ennemi.
+     *
+     * @return true si l'ennemi est vivant, false sinon.
+     */
     public boolean isAlive() {
         return isAlive;
     }
 
+    /**
+     * Marque l'ennemi comme mort.
+     */
     public void kill() {
-        this.isAlive = false; // Marque l'ennemi comme mort
+        this.isAlive = false;
     }
 
+    /**
+     * Déplace l'ennemi selon les décalages donnés.
+     *
+     * @param dx Décalage selon l'axe X.
+     * @param dy Décalage selon l'axe Y.
+     */
     public void move(float dx, float dy) {
         this.translate(dx, dy, 0); // Déplacer l'ennemi dans le plan XY
     }
