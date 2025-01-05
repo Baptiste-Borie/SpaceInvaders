@@ -6,9 +6,8 @@ public class Player extends GraphicalObject {
 
     public Player(float pX, float pY, float pZ,
             float angX, float angY, float angZ,
-            float r, float g, float b,
-            float scale) {
-        super(pX, pY, pZ, angX, angY, angZ, r, g, b, scale);
+            float scale, float height, float width) {
+        super(pX, pY, pZ, angX, angY, angZ, scale, height, width);
     }
 
     @Override

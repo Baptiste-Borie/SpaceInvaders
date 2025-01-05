@@ -5,8 +5,8 @@ import com.jogamp.opengl.GL2;
 public class Projectile extends GraphicalObject {
     private float speed; // Vitesse du projectile
 
-    public Projectile(float x, float y, float z, float speed) {
-        super(x, y, z, 0, 0, 0, 1.0f, 1.0f, 0.0f, 0.2f); // Couleur jaune par défaut
+    public Projectile(float x, float y, float z, float speed, float height, float width) {
+        super(x, y, z, 1.0f, 1.0f, 0.0f, 0.2f, height, width); // Couleur jaune par défaut
         this.speed = speed;
     }
 

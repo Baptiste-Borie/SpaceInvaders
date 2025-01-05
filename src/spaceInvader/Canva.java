@@ -20,6 +20,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
     private static final float X_LIMIT = 10.0f; // Limite horizontale
     private static final float Y_LIMIT = 5.0f; // Limite verticale
+    private static final int MAX_ROWS = 5; // Nombre maximum de rangées d'ennemis
 
     private Animator animator;
     private Player player; // Le Player contrôlé par le joueur
@@ -33,6 +34,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
     private int enemiesKilled = 0; // Compteur d'ennemis tués
     private int waveNumber = 1; // Numéro de la vague
+    private int waveNumberLabel = 1; // Numéro de la vague label qui ne baissera pas apres la vague 5
 
     public Canva(Fenetre frame) {
         super();
@@ -46,9 +48,11 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         animator.start();
 
         // Initialise le Player avec les coordonnées et les paramètres nécessaires
-        this.player = new Player(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.4f); // Player bleu
-
+        this.player = new Player(
+                0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f,
+                0.4f,
+                1.0f, 1.0f);
         // Initialisation des ennemis en grille
         initializeEnemies();
 
@@ -97,7 +101,6 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
                 gl.glPushMatrix();
                 gl.glTranslatef(enemy.getX(), enemy.getY(), enemy.getZ());
                 enemy.display(gl);
-                enemy.drawBoundingBox(gl);
                 gl.glPopMatrix();
             }
         }
@@ -106,7 +109,6 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
             gl.glPushMatrix();
             gl.glTranslatef(projectile.getX(), projectile.getY(), projectile.getZ());
             projectile.display(gl);
-            projectile.drawBoundingBox(gl);
             gl.glPopMatrix();
         }
 
@@ -152,7 +154,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
     private void initializeEnemies() {
         float startX = -2.0f; // Position de départ en X
-        float startY = -4.0f; // Position de départ en Y
+        float startY = 4.0f; // Position de départ en Y
         float spacingX = 1.5f; // Espacement entre les ennemis en X
         float spacingY = 1.0f; // Espacement entre les rangées en Y
 
@@ -164,15 +166,24 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
             for (int i = 0; i < enemiesInRow; i++) {
                 float x = rowStartX + i * spacingX;
                 float y = startY - j * spacingY;
-                enemies.add(new Enemy(x, y, 0.0f, 0.4f));
+                enemies.add(new Enemy(x, y, 0.0f, 0.4f, 0.8f, 0.8f));
             }
         }
     }
 
     private void nextWave() {
         enemies.clear(); // Supprimer les ennemis existants
-        initializeEnemies(); // Réinitialiser les ennemis
-        waveNumber++; // Passer à la vague suivante
+
+        // Si le nombre de rangées atteint le maximum, on le réinitialise
+        if (waveNumber >= MAX_ROWS) {
+            waveNumber = 1; // Remet à 1 le nombre de rangées
+            enemyDirection += 0.05f; // Augmente la vitesse des ennemis
+        } else {
+            waveNumber++; // Passe à la vague suivante en augmentant le nombre de rangées
+            waveNumberLabel++;
+        }
+
+        initializeEnemies(); // Réinitialise les ennemis avec la nouvelle vague
     }
 
     private void moveEnemies() {
@@ -197,7 +208,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
     }
 
     public void shoot() {
-        projectiles.add(new Projectile(player.getX(), player.getY(), player.getZ() - 1.0f, -0.2f));
+        projectiles.add(new Projectile(player.getX(), player.getY(), player.getZ() - 1.0f, -0.2f, 0.8f, 0.8f));
     }
 
     /*
@@ -214,32 +225,17 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
     }
 
-    private boolean isColliding(Projectile projectile, Enemy enemy) {
-        float px = projectile.getX();
-        float py = projectile.getY();
+    private boolean isColliding(GraphicalObject obj1, GraphicalObject obj2) {
+        float halfWidth1 = obj1.getWidth() / 2;
+        float halfHeight1 = obj1.getHeight() / 2;
+        float halfWidth2 = obj2.getWidth() / 2;
+        float halfHeight2 = obj2.getHeight() / 2;
 
-        float ex = enemy.getX();
-        float ey = enemy.getY();
+        float distanceX = Math.abs(obj1.getX() - obj2.getX());
+        float distanceY = Math.abs(obj1.getY() - obj2.getY());
 
-        float scale = enemy.getScale(); // Taille de l'ennemi
-        float margin = 0.2f; // Marge supplémentaire pour rendre la hitbox plus généreuse
-
-        return Math.abs(px - ex) < scale + margin &&
-                Math.abs(py - ey) < scale + margin;
-    }
-
-    private boolean isColliding(Player cube, Enemy enemy) {
-        float cx = player.getX();
-        float cy = player.getY();
-
-        float ex = enemy.getX();
-        float ey = enemy.getY();
-
-        float scale = enemy.getScale(); // Taille de l'ennemi
-        float margin = 0.2f; // Marge supplémentaire pour rendre la hitbox plus généreuse
-
-        return Math.abs(cx - ex) < scale + margin &&
-                Math.abs(cy - ey) < scale + margin;
+        return distanceX < (halfWidth1 + halfWidth2) &&
+                distanceY < (halfHeight1 + halfHeight2);
     }
 
     private void checkCollisions() {
@@ -346,7 +342,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
             if (enemy.getY() <= -Y_LIMIT || isColliding(player, enemy)) {
                 running = false; // Arrête le thread de gestion des entrées
                 animator.stop(); // Arrête l’animation
-                frame.launchGameOverScreen(enemiesKilled, waveNumber); // Affiche l'écran de fin de jeu
+                frame.launchGameOverScreen(enemiesKilled, waveNumberLabel); // Affiche l'écran de fin de jeu
                 return;
             }
         }
@@ -391,7 +387,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
 
         // Numéro de vague
-        String waveText = "Vague : " + waveNumber;
+        String waveText = "Vague : " + waveNumberLabel;
         gl.glRasterPos2f(10, 550); // Position du texte
         for (char c : waveText.toCharArray()) {
             glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);

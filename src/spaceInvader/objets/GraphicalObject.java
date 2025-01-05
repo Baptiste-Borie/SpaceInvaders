@@ -7,21 +7,20 @@ public abstract class GraphicalObject {
     private float angX, angY, angZ;
     private float r, g, b;
     private float scale;
+    private float height, width;
 
     public GraphicalObject(float pX, float pY, float pZ,
             float angX, float angY, float angZ,
-            float r, float g, float b,
-            float scale) {
+            float scale, float height, float width) {
         this.posX = pX;
         this.posY = pY;
         this.posZ = pZ;
         this.angX = angX;
         this.angY = angY;
         this.angZ = angZ;
-        this.r = r;
-        this.g = g;
-        this.b = b;
         this.scale = scale;
+        this.height = height;
+        this.width = width;
 
     }
 
@@ -61,6 +60,14 @@ public abstract class GraphicalObject {
 
     public float getScale() {
         return scale;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public float getWidth() {
+        return width;
     }
 
     public void setX(float posX) {

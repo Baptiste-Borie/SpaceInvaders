@@ -3,53 +3,63 @@ package spaceInvader.objets;
 import com.jogamp.opengl.GL2;
 
 public class Enemy extends GraphicalObject {
-    private static final float EPSILON = 0.01f; // Tolérance pour éviter les collisions prématurées
 
     private boolean isAlive;
 
-    public Enemy(float pX, float pY, float pZ, float scale) {
-        super(pX, pY, pZ, 0, 0, 0, 1.0f, 0.0f, 0.0f, scale); // Rouge par défaut
+    public Enemy(float pX, float pY, float pZ, float scale, float height, float width) {
+        super(pX, pY, pZ, 0.0f, 1.0f, 0.0f, scale, height, width); // Vert par défaut
         this.isAlive = true;
     }
 
     @Override
     public void displayNormalized(GL2 gl) {
         if (isAlive) {
-            gl.glBegin(GL2.GL_TRIANGLES);
+            // Début de la création de l'alien
+            gl.glBegin(GL2.GL_QUADS);
 
-            // Base de la pyramide (rouge clair)
-            gl.glColor3f(0.3f, 0.0f, 0.0f); // Rouge clair
-            gl.glVertex3f(-0.8f, -0.8f, -0.8f);
-            gl.glVertex3f(0.8f, -0.8f, -0.8f);
-            gl.glVertex3f(0.8f, -0.8f, 0.8f);
+            // Couleur principale : vert clair
+            gl.glColor3f(0.1f, 0.8f, 0.1f);
 
-            gl.glVertex3f(-0.8f, -0.8f, -0.8f);
-            gl.glVertex3f(-0.8f, -0.8f, 0.8f);
-            gl.glVertex3f(0.8f, -0.8f, 0.8f);
+            // Corps principal (centre)
+            gl.glVertex3f(-0.8f, -0.8f, 0.0f);
+            gl.glVertex3f(0.8f, -0.8f, 0.0f);
+            gl.glVertex3f(0.8f, 0.8f, 0.0f);
+            gl.glVertex3f(-0.8f, 0.8f, 0.0f);
 
-            // Face 0.8rouge foncé)
-            gl.glColor3f(0.8f, 0.0f, 0.0f); // Rouge foncé
-            gl.glVertex3f(0.0f, 0.8f, 0.0f); // Sommet
-            gl.glVertex3f(-0.8f, -0.8f, -0.8f); // Coin arrière gauche
-            gl.glVertex3f(0.8f, -0.8f, -0.8f); // Coin arrière droit
+            // Yeux (deux carrés orange)
+            gl.glColor3f(1.0f, 0.5f, 0.0f); // Orange
+            gl.glVertex3f(-0.4f, 0.2f, 0.02f);
+            gl.glVertex3f(-0.2f, 0.2f, 0.02f);
+            gl.glVertex3f(-0.2f, 0.4f, 0.02f);
+            gl.glVertex3f(-0.4f, 0.4f, 0.02f);
 
-            // Face 2 (rouge clair)
-            gl.glColor3f(0.8f, 0.0f, 0.0f); // Rouge clair
-            gl.glVertex3f(0.0f, 0.8f, 0.0f); // Sommet
-            gl.glVertex3f(0.8f, -0.8f, -0.8f); // Coin arrière droit
-            gl.glVertex3f(0.8f, -0.8f, 0.8f); // Coin avant droit
+            gl.glVertex3f(0.1f, 0.1f, 0.01f);
+            gl.glVertex3f(0.4f, 0.2f, 0.02f);
+            gl.glVertex3f(0.4f, 0.4f, 0.02f);
+            gl.glVertex3f(0.2f, 0.4f, 0.02f);
 
-            // Face 3 (rouge foncé)
-            gl.glColor3f(0.6f, 0.0f, 0.0f); // Rouge foncé
-            gl.glVertex3f(0.0f, 0.8f, 0.0f); // Sommet
-            gl.glVertex3f(0.8f, -0.8f, 0.8f); // Coin avant droit
-            gl.glVertex3f(-0.8f, -0.8f, 0.8f); // Coin avant gauche
+            // Antennes (deux rectangles verts foncés)
+            gl.glColor3f(0.0f, 0.6f, 0.0f);
+            gl.glVertex3f(-0.6f, 0.8f, 0.0f);
+            gl.glVertex3f(-0.4f, 0.8f, 0.0f);
+            gl.glVertex3f(-0.4f, 1.0f, 0.0f);
+            gl.glVertex3f(-0.6f, 1.0f, 0.0f);
 
-            // Face 4 (rouge clair)
-            gl.glColor3f(0.8f, 0.0f, 0.0f); // Rouge clair
-            gl.glVertex3f(0.0f, 0.8f, 0.0f); // Sommet
-            gl.glVertex3f(-0.8f, -0.8f, 0.8f); // Coin avant gauche
-            gl.glVertex3f(-0.8f, -0.8f, -0.8f); // Coin arrière gauche
+            gl.glVertex3f(0.4f, 0.8f, 0.0f);
+            gl.glVertex3f(0.6f, 0.8f, 0.0f);
+            gl.glVertex3f(0.6f, 1.0f, 0.0f);
+            gl.glVertex3f(0.4f, 1.0f, 0.0f);
+
+            // Pieds (deux rectangles verts foncés)
+            gl.glVertex3f(-0.6f, -1.0f, 0.0f);
+            gl.glVertex3f(-0.2f, -1.0f, 0.0f);
+            gl.glVertex3f(-0.2f, -0.8f, 0.0f);
+            gl.glVertex3f(-0.6f, -0.8f, 0.0f);
+
+            gl.glVertex3f(0.2f, -1.0f, 0.0f);
+            gl.glVertex3f(0.6f, -1.0f, 0.0f);
+            gl.glVertex3f(0.6f, -0.8f, 0.0f);
+            gl.glVertex3f(0.2f, -0.8f, 0.0f);
 
             gl.glEnd();
         }
@@ -66,5 +76,4 @@ public class Enemy extends GraphicalObject {
     public void move(float dx, float dy) {
         this.translate(dx, dy, 0); // Déplacer l'ennemi dans le plan XY
     }
-
 }
