@@ -4,7 +4,9 @@ import com.jogamp.opengl.*;
 import com.jogamp.opengl.awt.GLCanvas;
 import com.jogamp.opengl.util.Animator;
 import com.jogamp.opengl.glu.GLU;
+import com.jogamp.opengl.util.gl2.GLUT;
 
+import java.awt.Frame;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -14,11 +16,13 @@ import spaceInvader.objets.*;
 
 public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
-    private static final float X_LIMIT = 17.0f; // Limite horizontale
-    private static final float Y_LIMIT = 9.0f; // Limite verticale
+    private Fenetre frame;
+
+    private static final float X_LIMIT = 10.0f; // Limite horizontale
+    private static final float Y_LIMIT = 5.0f; // Limite verticale
 
     private Animator animator;
-    private Cube player; // Le cube contrôlé par le joueur
+    private Player player; // Le Player contrôlé par le joueur
     private ArrayList<Projectile> projectiles;
     private ArrayList<Enemy> enemies; // Liste des ennemis
     private boolean[] keys; // Tableau pour enregistrer les touches pressées
@@ -27,8 +31,12 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
 
     private float enemyDirection = 0.1f; // Direction des ennemis (gauche-droite)
 
-    public Canva() {
+    private int enemiesKilled = 0; // Compteur d'ennemis tués
+    private int waveNumber = 1; // Numéro de la vague
+
+    public Canva(Fenetre frame) {
         super();
+        this.frame = frame;
         this.projectiles = new ArrayList<>();
         this.enemies = new ArrayList<>(); // Initialiser la liste d'ennemis
         this.keys = new boolean[256]; // Tableau pour les touches (max 256 codes)
@@ -37,9 +45,9 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         animator = new Animator(this);
         animator.start();
 
-        // Initialise le cube avec les coordonnées et les paramètres nécessaires
-        this.player = new Cube(0.0f, 0.0f, -15.0f, 0.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.5f); // Cube bleu
+        // Initialise le Player avec les coordonnées et les paramètres nécessaires
+        this.player = new Player(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.4f); // Player bleu
 
         // Initialisation des ennemis en grille
         initializeEnemies();
@@ -48,15 +56,6 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         this.running = true;
         this.inputThread = new Thread(this::processInput);
         this.inputThread.start();
-    }
-
-    private void initializeEnemies() {
-        for (int i = 0; i < 1; i++) { // 3 colonnes
-            for (int j = 0; j < 1; j++) { // 2 rangées
-                // enemies.add(new Enemy(-8.0f + i * 2.0f, 5.0f - j * 1.5f, 0.0f, 0.4f));
-                enemies.add(new Enemy(-0.0f + i * 2.0f, 3.0f - j * 1.5f, 0.0f, 0.4f));
-            }
-        }
     }
 
     @Override
@@ -71,52 +70,26 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
     public void display(GLAutoDrawable drawable) {
         GL2 gl = drawable.getGL().getGL2();
         GLU glu = new GLU();
+        GLUT glut = new GLUT();
 
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
         gl.glLoadIdentity();
 
         glu.gluLookAt(
-                0.0f, 0.0f, 20.0f, // Position de la caméra
+                0.0f, 2.5f, 20.0f, // Position de la caméra
                 0.0f, 0.0f, 0.0f, // Point regardé par la caméra
                 0.0f, 1.0f, 0.0f // Vecteur "haut"
         );
 
-        // Déplacement des ennemis
-        // moveEnemies();
+        moveEnemies();
+        updateProjectiles();
+        checkCollisions();
 
-        // Gérer les collisions
-        Iterator<Projectile> projectileIterator = projectiles.iterator();
-        while (projectileIterator.hasNext()) {
-            Projectile projectile = projectileIterator.next();
-
-            Iterator<Enemy> enemyIterator = enemies.iterator();
-            while (enemyIterator.hasNext()) {
-                Enemy enemy = enemyIterator.next();
-                System.out.println("Enemy position: X=" + enemy.getX() + " Y=" + enemy.getY() + " Z="
-                        + enemy.getZ());
-
-                if (enemy.isAlive() && enemy.isFullyContained(projectile)) {
-                    System.out.println("Collision detected!");
-                    // Supprimer l'ennemi et le projectile
-                    enemyIterator.remove(); // Supprime l'ennemi
-                    enemy.kill(); // Marque l'ennemi comme mort
-                    projectileIterator.remove(); // Supprime le projectile
-                    continue; // Passe au prochain projectile
-                }
-            }
-
-            // Déplacer le projectile
-            projectile.move();
-        }
-
-        // Supprimer les projectiles hors de la scène
         projectiles.removeIf(p -> p.getY() > Y_LIMIT || p.getY() < -Y_LIMIT);
 
-        // Afficher les objets restants
         gl.glPushMatrix();
         gl.glTranslatef(player.getX(), player.getY(), player.getZ());
         player.display(gl);
-        player.drawBoundingBox(gl);
         gl.glPopMatrix();
 
         for (Enemy enemy : enemies) {
@@ -136,30 +109,9 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
             projectile.drawBoundingBox(gl);
             gl.glPopMatrix();
         }
-    }
 
-    private void moveEnemies() {
-        // Déplacer les ennemis horizontalement
-        for (Enemy enemy : enemies) {
-            enemy.move(enemyDirection, 0);
-        }
-
-        // Vérifier si un ennemi atteint une limite
-        boolean changeDirection = false;
-        for (Enemy enemy : enemies) {
-            if (Math.abs(enemy.getX()) > X_LIMIT) {
-                changeDirection = true;
-                break;
-            }
-        }
-
-        // Changer la direction et descendre d'un cran si nécessaire
-        if (changeDirection) {
-            enemyDirection = -enemyDirection; // Inverser la direction
-            for (Enemy enemy : enemies) {
-                enemy.move(0, -0.5f); // Descendre les ennemis
-            }
-        }
+        // Dessiner l'interface utilisateur (HUD)
+        drawHUD(gl, glut);
     }
 
     @Override
@@ -171,7 +123,7 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         gl.glViewport(0, 0, width, height);
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
-        glu.gluPerspective(30.0, aspect, 0.1, 100.0);
+        glu.gluPerspective(30.0, aspect, 1.0, 50.0);
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
     }
@@ -189,9 +141,143 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
         }
     }
 
+    /*
+     * ----------------------------------
+     * 
+     * 
+     * Game logic enemies methods
+     * 
+     * ----------------------------------
+     */
+
+    private void initializeEnemies() {
+        float startX = -2.0f; // Position de départ en X
+        float startY = -4.0f; // Position de départ en Y
+        float spacingX = 1.5f; // Espacement entre les ennemis en X
+        float spacingY = 1.0f; // Espacement entre les rangées en Y
+
+        int rows = waveNumber; // Le nombre de rangées dépend de la vague
+        for (int j = 0; j < rows; j++) {
+            int enemiesInRow = rows - j;
+            float rowStartX = startX - (enemiesInRow - 1) * spacingX / 2;
+
+            for (int i = 0; i < enemiesInRow; i++) {
+                float x = rowStartX + i * spacingX;
+                float y = startY - j * spacingY;
+                enemies.add(new Enemy(x, y, 0.0f, 0.4f));
+            }
+        }
+    }
+
+    private void nextWave() {
+        enemies.clear(); // Supprimer les ennemis existants
+        initializeEnemies(); // Réinitialiser les ennemis
+        waveNumber++; // Passer à la vague suivante
+    }
+
+    private void moveEnemies() {
+        for (Enemy enemy : enemies) {
+            enemy.move(enemyDirection, 0);
+        }
+
+        boolean changeDirection = false;
+        for (Enemy enemy : enemies) {
+            if (Math.abs(enemy.getX()) > (X_LIMIT - 1.0f)) {
+                changeDirection = true;
+                break;
+            }
+        }
+
+        if (changeDirection) {
+            enemyDirection = -enemyDirection;
+            for (Enemy enemy : enemies) {
+                enemy.move(0, -0.5f);
+            }
+        }
+    }
+
     public void shoot() {
         projectiles.add(new Projectile(player.getX(), player.getY(), player.getZ() - 1.0f, -0.2f));
     }
+
+    /*
+     * ----------------------------------
+     * 
+     * 
+     * Game collision methods
+     * 
+     * ----------------------------------
+     */
+    private void updateProjectiles() {
+        for (Projectile projectile : projectiles) {
+            projectile.move();
+        }
+    }
+
+    private boolean isColliding(Projectile projectile, Enemy enemy) {
+        float px = projectile.getX();
+        float py = projectile.getY();
+
+        float ex = enemy.getX();
+        float ey = enemy.getY();
+
+        float scale = enemy.getScale(); // Taille de l'ennemi
+        float margin = 0.2f; // Marge supplémentaire pour rendre la hitbox plus généreuse
+
+        return Math.abs(px - ex) < scale + margin &&
+                Math.abs(py - ey) < scale + margin;
+    }
+
+    private boolean isColliding(Player cube, Enemy enemy) {
+        float cx = player.getX();
+        float cy = player.getY();
+
+        float ex = enemy.getX();
+        float ey = enemy.getY();
+
+        float scale = enemy.getScale(); // Taille de l'ennemi
+        float margin = 0.2f; // Marge supplémentaire pour rendre la hitbox plus généreuse
+
+        return Math.abs(cx - ex) < scale + margin &&
+                Math.abs(cy - ey) < scale + margin;
+    }
+
+    private void checkCollisions() {
+        Iterator<Projectile> projectileIterator = projectiles.iterator();
+
+        while (projectileIterator.hasNext()) {
+            Projectile projectile = projectileIterator.next();
+
+            Iterator<Enemy> enemyIterator = enemies.iterator();
+            while (enemyIterator.hasNext()) {
+                Enemy enemy = enemyIterator.next();
+
+                if (enemy.isAlive() && isColliding(projectile, enemy)) {
+                    enemy.kill(); // Marquer l'ennemi comme mort
+                    projectileIterator.remove(); // Supprimer le projectile
+                    enemiesKilled++; // Incrémenter le compteur d'ennemis tués
+                    break; // Passer au projectile suivant
+                }
+            }
+        }
+
+        // Vérifier si tous les ennemis sont morts
+        if (enemies.stream().noneMatch(Enemy::isAlive)) {
+            nextWave(); // Charger la vague suivante
+        }
+
+        checkGameOver();
+
+    }
+
+    /*
+     * ----------------------------------
+     * 
+     * 
+     * Key listener methods
+     * 
+     * ----------------------------------
+     */
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -246,4 +332,75 @@ public class Canva extends GLCanvas implements GLEventListener, KeyListener {
             }
         }
     }
+
+    /*
+     * ----------------------------------
+     * 
+     * Stop the game
+     * 
+     * ----------------------------------
+     */
+
+    private void checkGameOver() {
+        for (Enemy enemy : enemies) {
+            if (enemy.getY() <= -Y_LIMIT || isColliding(player, enemy)) {
+                running = false; // Arrête le thread de gestion des entrées
+                animator.stop(); // Arrête l’animation
+                frame.launchGameOverScreen(enemiesKilled, waveNumber); // Affiche l'écran de fin de jeu
+                return;
+            }
+        }
+    }
+
+    public void stop() {
+        running = false; // Arrête le thread d’entrée utilisateur
+        if (animator != null && animator.isStarted()) {
+            animator.stop(); // Arrête l’animation proprement
+        }
+        try {
+            inputThread.join(); // Attendre la fin du thread d’entrée
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*
+     * 
+     * 
+     * HUD methods
+     * 
+     * 
+     */
+
+    private void drawHUD(GL2 gl, GLUT glut) {
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+        gl.glOrtho(0, 800, 0, 600, -1, 1); // Configure une projection orthogonale
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPushMatrix();
+        gl.glLoadIdentity();
+
+        gl.glColor3f(1.0f, 1.0f, 1.0f); // Couleur blanche
+
+        // Ennemis tués
+        String scoreText = "Ennemis tués : " + enemiesKilled;
+        gl.glRasterPos2f(10, 580); // Position du texte
+        for (char c : scoreText.toCharArray()) {
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        }
+
+        // Numéro de vague
+        String waveText = "Vague : " + waveNumber;
+        gl.glRasterPos2f(10, 550); // Position du texte
+        for (char c : waveText.toCharArray()) {
+            glut.glutBitmapCharacter(GLUT.BITMAP_HELVETICA_18, c);
+        }
+
+        gl.glMatrixMode(GL2.GL_PROJECTION);
+        gl.glPopMatrix();
+        gl.glMatrixMode(GL2.GL_MODELVIEW);
+        gl.glPopMatrix();
+    }
+
 }

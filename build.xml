@@ -1,0 +1,41 @@
+<project name="spaceInvader" default="run" basedir=".">
+
+    <!-- Définition des propriétés -->
+    <property name="src.dir" value="src"/>
+    <property name="build.dir" value="build"/>
+    <property name="lib.dir" value="lib/jogamp-all-platforms/jar"/>
+    <property name="main.class" value="spaceInvader.Fenetre"/>
+
+    <!-- Nettoyage des dossiers build -->
+    <target name="clean">
+        <delete includeEmptyDirs="true">
+            <fileset dir="${build.dir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <!-- Compilation des fichiers Java -->
+    <target name="compile">
+        <mkdir dir="${build.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${build.dir}" includeantruntime="false">
+            <classpath>
+                <pathelement path="${lib.dir}/jogl-all.jar"/>
+                <pathelement path="${lib.dir}/gluegen-rt.jar"/>
+            </classpath>
+            <include name="spaceInvader/**/*.java"/>
+            <include name="spaceInvader/*.java"/>
+        </javac>
+    </target>
+
+    <!-- Exécution du programme -->
+    <target name="run" depends="compile">
+        <java classname="${main.class}" fork="true">
+            <classpath>
+                <pathelement path="${build.dir}"/>
+                <pathelement path="${lib.dir}/jogl-all.jar"/>
+                <pathelement path="${lib.dir}/gluegen-rt.jar"/>
+                  <pathelement path="assets"/> 
+            </classpath>
+            <jvmarg value="-Djava.library.path=lib/jogamp-all-platforms/lib"/>
+        </java>
+    </target>
+</project>

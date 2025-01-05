@@ -59,6 +59,10 @@ public abstract class GraphicalObject {
         return posZ;
     }
 
+    public float getScale() {
+        return scale;
+    }
+
     public void setX(float posX) {
         this.posX = posX;
     }
@@ -72,51 +76,14 @@ public abstract class GraphicalObject {
     }
 
     public void drawBoundingBox(GL2 gl) {
-        // Taille de la boîte englobante
+        float halfScale = this.getScale();
 
-        gl.glColor3f(0.0f, 1.0f, 0.0f); // Vert pour la boîte
-        gl.glBegin(GL2.GL_LINES);
-
-        float boxSize = 0.4f;
-        // Face avant
-        gl.glVertex3f(-boxSize, -boxSize, 0.0f);
-        gl.glVertex3f(boxSize, -boxSize, 0.0f);
-
-        gl.glVertex3f(boxSize, -boxSize, 0.0f);
-        gl.glVertex3f(boxSize, boxSize, 0.0f);
-
-        gl.glVertex3f(boxSize, boxSize, 0.0f);
-        gl.glVertex3f(-boxSize, boxSize, 0.0f);
-
-        gl.glVertex3f(-boxSize, boxSize, 0.0f);
-        gl.glVertex3f(-boxSize, -boxSize, 0.0f);
-
-        // Ajout pour dessiner les bords verticaux si en 3D
-        gl.glVertex3f(-boxSize, -boxSize, 0.0f);
-        gl.glVertex3f(-boxSize, -boxSize, 0.5f);
-
-        gl.glVertex3f(boxSize, -boxSize, 0.0f);
-        gl.glVertex3f(boxSize, -boxSize, 0.5f);
-
-        gl.glVertex3f(boxSize, boxSize, 0.0f);
-        gl.glVertex3f(boxSize, boxSize, 0.5f);
-
-        gl.glVertex3f(-boxSize, boxSize, 0.0f);
-        gl.glVertex3f(-boxSize, boxSize, 0.5f);
-
-        // Face arrière
-        gl.glVertex3f(-boxSize, -boxSize, 0.5f);
-        gl.glVertex3f(boxSize, -boxSize, 0.5f);
-
-        gl.glVertex3f(boxSize, -boxSize, 0.5f);
-        gl.glVertex3f(boxSize, boxSize, 0.5f);
-
-        gl.glVertex3f(boxSize, boxSize, 0.5f);
-        gl.glVertex3f(-boxSize, boxSize, 0.5f);
-
-        gl.glVertex3f(-boxSize, boxSize, 0.5f);
-        gl.glVertex3f(-boxSize, -boxSize, 0.5f);
-
+        gl.glColor3f(1.0f, 1.0f, 0.0f); // Couleur jaune pour la boîte
+        gl.glBegin(GL2.GL_LINE_LOOP);
+        gl.glVertex3f(-halfScale, -halfScale, 0);
+        gl.glVertex3f(halfScale, -halfScale, 0);
+        gl.glVertex3f(halfScale, halfScale, 0);
+        gl.glVertex3f(-halfScale, halfScale, 0);
         gl.glEnd();
     }
 

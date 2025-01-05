@@ -24,7 +24,6 @@ public class Projectile extends GraphicalObject {
     public void move() {
         this.translate(0.0f, -speed, 0.0f);
         this.setY(roundToDecimals(this.getY(), 2)); // Arrondir à 2 décimales
-        System.out.println("Projectile position: X=" + this.getX() + " Y=" + this.getY() + " Z=" + this.getZ());
     }
 
     public static float roundToDecimals(float value, int decimals) {
